@@ -1,5 +1,9 @@
+
+
 #define echo 12
 #define trig 13
+
+#define speakerPin 3
 
 #define enA 5
 #define in1 8
@@ -49,16 +53,16 @@ struct Cordinate {
   int direction;
 };
 
-#define leftSpeed 180
-#define rightSpeed 160
+#define leftSpeed 140
+#define rightSpeed 120
 
 Cordinate position = { startX, startY, North };
 
-const int DX[4] = { 0, 1, 0, -1 };
-const int DY[4] = { 1, 0, -1, 0 };
-bool visitedDFS[ROWS][COLS];
-int planDirs[ROWS * COLS];  // absolute dir per step (0..3)
-int planLen = 0;
+// const int DX[4] = { 0, 1, 0, -1 };
+// const int DY[4] = { 1, 0, -1, 0 };
+// bool visitedDFS[ROWS][COLS];
+// int planDirs[ROWS * COLS];  // absolute dir per step (0..3)
+// int planLen = 0;
 int caseNum = 1;
 
 void setup() {
@@ -85,14 +89,6 @@ void loop() {
   // // ForwardRight(200);
   // // BackwardLeft(200);
 
-  readSensor();
-  for (int i = 0; i < 5; i++) {
-    Serial.print(sensorValues[i]);
-    Serial.print("\t");
-  }
-  Serial.println("");
-  delay(200);
-
   // // Forward(150, 100);
   // if (RobotOnCross() == 1) {
   //   highBreak();
@@ -104,122 +100,143 @@ void loop() {
   //   Forward(leftSpeed, rightSpeed);
   // }
   followOneCell();
-  turnRight();
+  Beepbeep(1);
+  turnLeft();
+
+  readSensor();
+  for (int i = 0; i < 5; i++) {
+    Serial.print(sensorValues[i]);
+    Serial.print("\t");
+  }
+  Serial.println("");
+  delay(200);
 
   // ForwardRight(100);
   // ForwardLeft(100);
   // delay(500);
-
 }
 
 
 // FUNCTIONABLE FUNCTIONNNNNNNN
 
-void caseDefine(){
+void caseDefine() {
   switch (caseNum) {
-  case 1: // s r s s s l s s s r s s l s no box
-    if (ultraSonic() > 2 && ultraSonic() < 30) {
-      turnRight();
+    case 1:  // s r s s s l s s s r s s l s no box
+      if (ultraSonic() > 2 && ultraSonic() < 30) {
+        turnRight();
+        followOneCell();
+        turnLeft();
+        followOneCell();
+        turnRight();
+      } else {
+        followOneCell();
+        turnRight();
+        followOneCell();
+      }
+      followOneCell();
       followOneCell();
       turnLeft();
       followOneCell();
-      turnRight(); 
-    }
-    else {
+      followOneCell();
       followOneCell();
       turnRight();
       followOneCell();
-    }
-    followOneCell();
-    followOneCell();
-    turnLeft();
-    followOneCell();
-    followOneCell();
-    followOneCell();
-    turnRight();
-    followOneCell();
-    if (ultraSonic() > 2 && ultraSonic() < 30) {
+      if (ultraSonic() > 2 && ultraSonic() < 30) {
+        turnLeft();
+        followOneCell();
+        turnRight();
+        followOneCell();
+        lowBreak();
+        Beepbeep(2);
+        delay(1000);
+        caseNum = 11;
+        caseDefine();
+      } else {
+        followOneCell();
+        turnLeft();
+        followOneCell();
+        lowBreak();
+        Beepbeep(2);
+        delay(1000);
+        caseNum = 10;
+        caseDefine();
+      }
+      break;
+    case 10:  //back to start 1 no box:a s r s s s l push s s s r s s s l s
+      turnAround();
+      followOneCell();
+      turnRight();
+      followOneCell();
+      followOneCell();
+      followOneCell();
+      turnLeft();
+      pushOrangebox();
+      followOneCell();
+      followOneCell();
+      followOneCell();
+      turnRight();
+      followOneCell();
+      followOneCell();
+      turnLeft();
+      if (ultraSonic() > 2 && ultraSonic() < 30) {
+        turnRight();
+        followOneCell();
+        turnLeft();
+        followOneCell();
+        lowBreak();
+        Beepbeep(3);
+        delay(1000);
+        break;
+      } else {
+        followOneCell();
+        turnRight();
+        followOneCell();
+        lowBreak();
+        Beepbeep(3);
+        delay(1000);
+        break;
+      }
+    case 11:
+      turnAround();
+      followOneCell();
       turnLeft();
       followOneCell();
       turnRight();
       followOneCell();
-      caseNum = 11;
-      caseDefine();
-      break;
-    }
-    else {
       followOneCell();
       turnLeft();
+      pushOrangebox();
       followOneCell();
-      caseNum = 10;
-      caseDefine();
-      break;
-    }
-  case 10: //back to start 1 no box:a s r s s s l push s s s r s s s l s
-    turnAround();
-    followOneCell();
-    turnRight();
-    followOneCell();
-    followOneCell();
-    followOneCell();
-    turnLeft();
-    pushOrangebox();
-    followOneCell();
-    followOneCell();
-    followOneCell();
-    turnRight();
-    followOneCell();
-    followOneCell();
-    turnLeft();
-    if (ultraSonic() > 2 && ultraSonic() < 30){
+      followOneCell();
+      followOneCell();
       turnRight();
+      followOneCell();
       followOneCell();
       turnLeft();
-      followOneCell();
+      if (ultraSonic() > 2 && ultraSonic() < 30) {
+        turnRight();
+        followOneCell();
+        turnLeft();
+        followOneCell();
+        lowBreak();
+        Beepbeep(3);
+        delay(1000);
+        break;
+      } else {
+        followOneCell();
+        turnRight();
+        followOneCell();
+        lowBreak();
+        Beepbeep(3);
+        delay(1000);
+        break;
+      }
       break;
-    }
-    else {
-      followOneCell();
-      turnRight();
-      followOneCell();
-      break;
-    }
-  case 11:
-    turnAround();
-    followOneCell();
-    turnLeft();
-    followOneCell();
-    turnRight();
-    followOneCell();
-    followOneCell();
-    turnLeft();
-    pushOrangebox();
-    followOneCell();
-    followOneCell();
-    followOneCell();
-    turnRight();
-    followOneCell();
-    followOneCell();
-    turnLeft();
-    if (ultraSonic() > 2 && ultraSonic() < 30){
-      turnRight();
-      followOneCell();
-      turnLeft();
-      followOneCell();
-      break;
-    }
-    else {
-      followOneCell();
-      turnRight();
-      followOneCell();
-      break;
-    }
-    break;
   }
 }
 
-void pushOrangebox(){ //s l s / r s s / r s s / r s r / s s r / s l s / l s s / l s r / s r s / r
-  followOneCell();
+void pushOrangebox() {  //s l s / r s s / r s s / r s r / s s r / s l s / l s s / l s r / s r s / r
+  followOneCell();      //push
   turnLeft();
   followOneCell();
 
@@ -235,8 +252,8 @@ void pushOrangebox(){ //s l s / r s s / r s s / r s r / s s r / s l s / l s s / 
   followOneCell();
   turnRight();
 
-  followOneCell();
-  followOneCell();
+  followOneCell();  //push
+  // followOneCell();
   turnRight();
 
   followOneCell();
@@ -260,21 +277,18 @@ void pushOrangebox(){ //s l s / r s s / r s s / r s r / s s r / s l s / l s s / 
 
 void followOneCell() {
   // leave the current node slightly so we don't retrigger immediately
+  // while (millis() - t0 < 700) {
+  //   Forward(leftSpeed, rightSpeed);
+  // }
+  while (RobotOnCross() == 0) {
+    Forward(leftSpeed, rightSpeed);
+  }
+
   unsigned long t0 = millis();
   while (millis() - t0 < 200) {
     Forward(leftSpeed, rightSpeed);
   }
-  while (RobotOnCross() == 0) {
-    Forward(leftSpeed, rightSpeed);
-    delay(80);
-    highBreak();
-
-  }
-
   changePosition();
-  while (millis() - t0 < 200) {
-    Forward(leftSpeed, rightSpeed);
-  }
   highBreak();
   delay(500);
 }
@@ -316,6 +330,14 @@ int RobotOnCross() {
   } else return 0;
 }
 
+void Beepbeep(int Count) {
+  for (int i = 0; i < Count; i++) {
+    tone(speakerPin, 1000, 1000);
+    noTone(speakerPin);
+    delay(400);
+  }
+  noTone(speakerPin);
+}
 
 void Forward(int SpeedL, int SpeedR) {
   readSensor();
@@ -364,17 +386,51 @@ void snapToLine() {  //ใส่หลังจาก Turn
 
 void turnLeft() {
   position.direction = (position.direction + 3) % 4;
-  BackwardLeft(150);
-  ForwardRight(130);
-  delay(600);
+  BackwardLeft(140);
+  ForwardRight(120);
+
+  unsigned long t0 = millis();
+  while (millis() - t0 < 800) {
+    readSensor();
+    if (sensorValues[2] < blackValue) break;  // go
+  }
+
+  bool seenOn = false;
+  t0 = millis();
+  while (millis() - t0 < 1200) {
+    readSensor();
+    bool centerOn = (sensorValues[2] > blackValue);
+    if (centerOn) {
+      seenOn = true;
+      break;
+    }
+  }
+  lowBreak();
   snapToLine();
 }
 
 void turnRight() {
   position.direction = (position.direction + 1) % 4;
-  ForwardLeft(150);
-  BackwardRight(130);
-  delay(400);
+  ForwardLeft(120);
+  BackwardRight(100);
+
+  unsigned long t0 = millis();
+  while (millis() - t0 < 800) {
+    readSensor();
+    if (sensorValues[2] < blackValue) break;  // go
+  }
+
+  bool seenOn = false;
+  t0 = millis();
+  while (millis() - t0 < 1200) {
+    readSensor();
+    bool centerOn = (sensorValues[2] > blackValue);
+    if (centerOn) {
+      seenOn = true;
+      break;
+    }
+  }
+  lowBreak();
   snapToLine();
 }
 
@@ -382,9 +438,33 @@ void turnAround() {
   position.direction = (position.direction + 2) % 4;
   ForwardLeft(150);
   BackwardRight(130);
-  delay(1200);
-  snapToLine();
+  unsigned long t0 = millis();
+  while (millis() - t0 < 800) {
+    readSensor();
+    if (sensorValues[2] < blackValue) break;  // center off the old line
+  }
+
+  // 2) Count two center-on crossings (≈90° and ≈180°)
+  int crossings = 0;
+  bool prevOn = false;
+  t0 = millis();
+  while (millis() - t0 < 2200) {  // safety timeout
+    readSensor();
+    bool centerOn = (sensorValues[2] > blackValue);
+    if (centerOn && !prevOn) {  // rising edge
+      crossings++;
+      if (crossings >= 2) {  // reached ~180°
+        delay(70);           // small extra to center
+        break;
+      }
+    }
+    prevOn = centerOn;
+  }
+
+  lowBreak();
+  snapToLine();  // fine-align on the corridor
 }
+
 
 void changePosition() {
   if (position.direction == North) position.y++;
@@ -392,100 +472,101 @@ void changePosition() {
   else if (position.direction == East) position.x++;
   else if (position.direction == West) position.x--;
 }
-void showGridInt(const int grid[ROWS][COLS]) {
-  for (int y = 0; y < ROWS; y++) {
-    for (int x = 0; x < COLS; x++) {
-      Serial.print(grid[y][x]);
-      Serial.print('\t');
-    }
-    Serial.println();
-  }
-}
 
-bool inBounds(int x, int y) {
-  return x >= 0 && x < COLS && y >= 0 && y < ROWS;
-}
+// void showGridInt(const int grid[ROWS][COLS]) {
+//   for (int y = 0; y < ROWS; y++) {
+//     for (int x = 0; x < COLS; x++) {
+//       Serial.print(grid[y][x]);
+//       Serial.print('\t');
+//     }
+//     Serial.println();
+//   }
+// }
 
-// Return true when goal reached; push dirs while unwinding
-bool dfsPlan(int x, int y) {
-  if (grid[y][x] == 3) return true;  // at goal
+// bool inBounds(int x, int y) {
+//   return x >= 0 && x < COLS && y >= 0 && y < ROWS;
+// }
 
-  visitedDFS[y][x] = true;
+// // Return true when goal reached; push dirs while unwinding
+// bool dfsPlan(int x, int y) {
+//   if (grid[y][x] == 3) return true;  // at goal
 
-  for (int dir = 0; dir < 4; dir++) {
-    int nx = x + DX[dir];
-    int ny = y + DY[dir];
+//   visitedDFS[y][x] = true;
 
-    if (!inBounds(nx, ny)) continue;
-    if (visitedDFS[ny][nx]) continue;
-    // walkable: 1 or 3 (goal). Skip 2 (blocked) and 0 (empty).
-    int cell = grid[ny][nx];
-    if (!(cell == 1 || cell == 3)) continue;
+//   for (int dir = 0; dir < 4; dir++) {
+//     int nx = x + DX[dir];
+//     int ny = y + DY[dir];
 
-    if (dfsPlan(nx, ny)) {
-      planDirs[planLen++] = dir;  // record absolute direction used to go x,y -> nx,ny
-      return true;
-    }
-  }
-  return false;  // dead end
-}
+//     if (!inBounds(nx, ny)) continue;
+//     if (visitedDFS[ny][nx]) continue;
+//     // walkable: 1 or 3 (goal). Skip 2 (blocked) and 0 (empty).
+//     int cell = grid[ny][nx];
+//     if (!(cell == 1 || cell == 3)) continue;
 
-bool buildDFSPlan(int sx, int sy) {
-  for (int y = 0; y < ROWS; y++)
-    for (int x = 0; x < COLS; x++) visitedDFS[y][x] = false;
-  planLen = 0;
+//     if (dfsPlan(nx, ny)) {
+//       planDirs[planLen++] = dir;  // record absolute direction used to go x,y -> nx,ny
+//       return true;
+//     }
+//   }
+//   return false;  // dead end
+// }
 
-  // Find goal (first '3')
-  int gx = -1, gy = -1;
-  for (int y = 0; y < ROWS; y++)
-    for (int x = 0; x < COLS; x++)
-      if (grid[y][x] == 3) {
-        gx = x;
-        gy = y;
-      }
+// bool buildDFSPlan(int sx, int sy) {
+//   for (int y = 0; y < ROWS; y++)
+//     for (int x = 0; x < COLS; x++) visitedDFS[y][x] = false;
+//   planLen = 0;
 
-  if (gx == -1) {
-    Serial.println("No checkpoint (3) in grid");
-    return false;
-  }
+//   // Find goal (first '3')
+//   int gx = -1, gy = -1;
+//   for (int y = 0; y < ROWS; y++)
+//     for (int x = 0; x < COLS; x++)
+//       if (grid[y][x] == 3) {
+//         gx = x;
+//         gy = y;
+//       }
 
-  // Run DFS from start; directions will be pushed in reverse
-  if (!dfsPlan(sx, sy)) {
-    Serial.println("DFS: no path");
-    return false;
-  }
+//   if (gx == -1) {
+//     Serial.println("No checkpoint (3) in grid");
+//     return false;
+//   }
 
-  // Reverse to make it start->goal order
-  for (int i = 0; i < planLen / 2; i++) {
-    int t = planDirs[i];
-    planDirs[i] = planDirs[planLen - 1 - i];
-    planDirs[planLen - 1 - i] = t;
-  }
+//   // Run DFS from start; directions will be pushed in reverse
+//   if (!dfsPlan(sx, sy)) {
+//     Serial.println("DFS: no path");
+//     return false;
+//   }
 
-  Serial.print("DFS plan len=");
-  Serial.println(planLen);
-  Serial.print("Dirs (0=N,1=E,2=S,3=W): ");
-  for (int i = 0; i < planLen; i++) {
-    Serial.print(planDirs[i]);
-    Serial.print(' ');
-  }
-  Serial.println();
-  return true;
-}
+//   // Reverse to make it start->goal order
+//   for (int i = 0; i < planLen / 2; i++) {
+//     int t = planDirs[i];
+//     planDirs[i] = planDirs[planLen - 1 - i];
+//     planDirs[planLen - 1 - i] = t;
+//   }
 
-void executePlan() {
-  for (int i = 0; i < planLen; i++) {
-    int desired = planDirs[i];                          // absolute dir for next step
-    int diff = (desired - position.direction + 4) % 4;  // 0=fwd,1=right,2=U,3=left
-    if (diff == 1) turnRight();
-    else if (diff == 3) turnLeft();
-    else if (diff == 2) turnAround();
+//   Serial.print("DFS plan len=");
+//   Serial.println(planLen);
+//   Serial.print("Dirs (0=N,1=E,2=S,3=W): ");
+//   for (int i = 0; i < planLen; i++) {
+//     Serial.print(planDirs[i]);
+//     Serial.print(' ');
+//   }
+//   Serial.println();
+//   return true;
+// }
 
-    followOneCell();
-  }
-  Serial.println("Yippee");
-  lowBreak();
-}
+// void executePlan() {
+//   for (int i = 0; i < planLen; i++) {
+//     int desired = planDirs[i];                          // absolute dir for next step
+//     int diff = (desired - position.direction + 4) % 4;  // 0=fwd,1=right,2=U,3=left
+//     if (diff == 1) turnRight();
+//     else if (diff == 3) turnLeft();
+//     else if (diff == 2) turnAround();
+
+//     followOneCell();
+//   }
+//   Serial.println("Yippee");
+//   lowBreak();
+// }
 
 void Backward(int SpeedL, int SpeedR) {
   BackwardLeft(SpeedL);
