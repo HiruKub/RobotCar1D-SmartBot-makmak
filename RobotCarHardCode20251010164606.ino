@@ -85,7 +85,7 @@ void setup() {
   Serial.begin(9600);
   pinMode(speakerPin, OUTPUT);
   caseNum = 1;
-  caseDefine();
+  pushOrangebox();
   // pushBoxforOneCell();
 }
 
@@ -139,6 +139,7 @@ void caseDefine() {
   switch (caseNum) {
     case 1:  // s r s s s l s s s r s s l s no box
       lowBreak();
+      delay(500);
       if (ultraSonic() > 2 && ultraSonic() < 30) {
         turnRight();
         moveOneCell();
@@ -204,18 +205,19 @@ void caseDefine() {
         turnLeft();
         moveOneCell();
         lowBreak();
+        delay(60);
         Beepbeep(3);
         delay(1000);
-        break;
       } else {
         moveOneCell();
         turnRight();
         moveOneCell();
         lowBreak();
+        delay(60);
         Beepbeep(3);
         delay(1000);
-        break;
       }
+      break;
     case 11:
       turnAround();
       moveOneCell();
@@ -257,7 +259,7 @@ void caseDefine() {
 
 void pushOrangebox() {  //s l s / r s s / r s s / r s r / s s r / s l s / l s s / l s r / s r s / r
   pushBoxforOneCell();      //push
-  turnLeft();
+  turnLeft();     
   moveOneCell();
 
   turnRight();
@@ -281,7 +283,7 @@ void pushOrangebox() {  //s l s / r s s / r s s / r s r / s s r / s l s / l s s 
   moveOneCell();
 
   turnLeft();
-  pushBoxforOneCell();
+  moveOneCell();
   pushBoxforOneCell();
 
   turnLeft();
@@ -296,7 +298,9 @@ void pushOrangebox() {  //s l s / r s s / r s s / r s r / s s r / s l s / l s s 
 }
 void pushBoxforOneCell(){
   moveOneCell();
-  Forward(200, 180);
+  lowBreak();
+  delay(60);
+  Forward(250, 230);
   delay(600);
   lowBreak(); 
   delay(60);
@@ -305,6 +309,7 @@ void pushBoxforOneCell(){
   lowBreak();
   delay(60);
 }
+
 void moveOneCell() {
   // leave the current node slightly so we don't retrigger immediately
   // while (millis() - t0 < 700) {
@@ -320,7 +325,7 @@ void moveOneCell() {
   }
   changePosition();
   Serial.println("walking 1 cell");
-  highBreak();
+  lowBreak();
   delay(120);
 }
 
@@ -462,8 +467,8 @@ void turnRight() {
 
 void turnAround() {
   position.direction = (position.direction + 2) % 4;
-  ForwardLeft(180);
-  BackwardRight(160);
+  ForwardLeft(140);
+  BackwardRight(120);
   delay(120);
   unsigned long t0 = millis();
   while (millis() - t0 < 800) {
@@ -508,15 +513,15 @@ void Backward(int SpeedL, int SpeedR) {
   if (weight > 0) {
     BackwardRight(SpeedR);
     BackwardLeft(SpeedL - 50);
-    Serial.println("Turn Right");
+    // Serial.println("Turn Right");
   } else if (weight < 0) {
     BackwardRight(SpeedR - 50);
     BackwardLeft(SpeedL);
-    Serial.println("Turn Left");
+    // Serial.println("Turn Left");
   } else {
     BackwardRight(SpeedR);
     BackwardLeft(SpeedL);
-    Serial.println("Go Forward");
+    // Serial.println("Go Forward");
   }
 }
 
