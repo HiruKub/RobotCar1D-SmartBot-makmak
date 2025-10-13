@@ -62,6 +62,7 @@ struct Cordinate {
 bool haveBeenBlack = false;
 
 Cordinate position = { startX, startY, North };
+unsigned long watermelonTime = millis();
 
 // const int DX[4] = { 0, 1, 0, -1 };
 // const int DY[4] = { 1, 0, -1, 0 };
@@ -88,7 +89,6 @@ void setup() {
   Serial.begin(9600);
   pinMode(speakerPin, OUTPUT);
   caseNum = 1;
-  
   // delay(500);
   caseDefine();
   // Serial.println("test1");
@@ -106,7 +106,7 @@ void loop() {
   // // BackwardLeft(200);
 
   // Forward(leftSpeed, rightSpeed);
- 
+
   // if (RobotOnCross() == 1) {
   //   highBreak();
   //   delay(1000);
@@ -232,7 +232,7 @@ void caseDefine() {
       delay(1000);
       break;
 
-    case 3://found box at check point
+    case 3:           //found box at check point
       turnAround();   // a
       moveOneCell();  // s
       turnLeft();     // l
@@ -405,7 +405,7 @@ void moveOneCellForPushBox() {
 }
 
 void BackwardAfterPush() {
-  Backward(leftSpeed,rightSpeed);
+  Backward(leftSpeed, rightSpeed);
   delay(500);
   Serial.println("HE HE!!");
   lowBreak();
@@ -417,7 +417,7 @@ void moveOneCell() {
   // while (millis() - t0 < 700) {
   //   Forward(leftSpeed, rightSpeed);
   // }
-  
+
 
   while (RobotOnCross() == 0) {
     Forward(leftSpeed, rightSpeed);
@@ -440,28 +440,29 @@ int ultraSonic() {
 }
 
 int RobotOnCross() {
-
   readSensor();
   // delay(100);
+  while (millis() - watermelonTime > 400) {
+    int count = 0;
+    for (int i = 0; i < 5; i++) {
+      sensorBlack[i] = (sensorValues[i] > blackValue) ? 1 : 0;
+      if (sensorBlack[i]) {
+        count++;
+      }
+    }
 
-  int count = 0;
-  for (int i = 0; i < 5; i++) {
-    sensorBlack[i] = (sensorValues[i] > blackValue) ? 1 : 0;
-    if (sensorBlack[i]) {
-      count++;
+    if (count >= 3) {
+      if (haveBeenBlack == true) {
+        // haveBeenBlack = false;watermelonTie = millis();
+        return 0;
+      } else {
+        watermelonTie = millis();
+        haveBeenBlackm = true;
+        return 1;
+      }
     }
   }
-
-  if (count >= 3) {
-    if(haveBeenBlack == true){
-      // haveBeenBlack = false;
-      return 0;
-    }
-    else{
-      haveBeenBlack = true;
-      return 1;
-    }
-  }
+  watermelonTie = millis();
   haveBeenBlack = false;
   return 0;
 }
@@ -490,12 +491,14 @@ void Forward(int SpeedL, int SpeedR) {
     sensorBlack[i] = 0;
   }
   if (weight > 0) {
-    ForwardRight(SpeedR - (abs(weight) * 2.2));
+    // ForwardRight(SpeedR - (abs(weight) * 2.2));
+    ForwardRight(SpeedR - 50);
     ForwardLeft(SpeedL);
     Serial.println("Turn Right");
   } else if (weight < 0) {
     ForwardRight(SpeedR);
-    ForwardLeft(SpeedL - (abs(weight) * 2.2));
+    // ForwardLeft(SpeedL - (abs(weight) * 2.2));
+    ForwardLeft(SpeedL - 50);
     Serial.println("Turn Left");
   } else {
     ForwardRight(SpeedR);
@@ -654,10 +657,12 @@ void Backward(int SpeedL, int SpeedR) {
   }
   if (weight > 0) {
     BackwardRight(SpeedR);
-    BackwardLeft(SpeedL - (abs(weight * 2.2)));
+    // BackwardLeft(SpeedL - (abs(weight * 2.2)));
+    BackwardLeft(SpeedL - 50);
     // Serial.println("Turn Right");
   } else if (weight < 0) {
-    BackwardRight(SpeedR - (abs(weight * 2.2)));
+    // BackwardRight(SpeedR - (abs(weight * 2.2)));
+    BackwardRight(SpeedR - 50);
     BackwardLeft(SpeedL);
     // Serial.println("Turn Left");
   } else {
