@@ -20,7 +20,7 @@ NewPing sonar(trig, echo, MAX_DISTANCE);
 #define S4 A1
 #define S5 A0
 
-int blackValue = 500;
+int blackValue = 700;
 #define North 0
 #define East 1
 #define South 2
@@ -56,7 +56,10 @@ struct Cordinate {
 };
 
 #define leftSpeed 140
-#define rightSpeed 120
+#define rightSpeed 140
+#define turnSpeed 120
+
+bool haveBeenBlack = false;
 
 Cordinate position = { startX, startY, North };
 
@@ -85,15 +88,25 @@ void setup() {
   Serial.begin(9600);
   pinMode(speakerPin, OUTPUT);
   caseNum = 1;
-  pushOrangebox();
+  
+  // delay(500);
+  caseDefine();
+  // Serial.println("test1");
+  // pushOrangebox();
   // pushBoxforOneCell();
+  // BackwardLeft(140);
+  // ForwardRight(140);
+  // delay(150);
+  // turnLeft();
+  // lowBreak();
 }
 
 void loop() {
   // // ForwardRight(200);
   // // BackwardLeft(200);
 
-  // // Forward(150, 100);
+  // Forward(leftSpeed, rightSpeed);
+ 
   // if (RobotOnCross() == 1) {
   //   highBreak();
   //   delay(1000);
@@ -117,7 +130,7 @@ void loop() {
   //   Serial.println("onCross");
   //   Beepbeep(1);
   // }
-
+  // Forward(140, 140);
   // ultraSonic();
 
   // ForwardRight(100);
@@ -128,7 +141,7 @@ void loop() {
   // turnRight();
   // moveOneCell();
   // turnLeft();
-  
+
   // ultraSonic();
 }
 
@@ -140,7 +153,7 @@ void caseDefine() {
     case 1:  // s r s s s l s s s r s s l s no box
       lowBreak();
       delay(500);
-      if (ultraSonic() > 2 && ultraSonic() < 30) {
+      if (ultraSonic() > 2 && ultraSonic() < 25) {
         turnRight();
         moveOneCell();
         turnLeft();
@@ -160,7 +173,7 @@ void caseDefine() {
       moveOneCell();
       turnRight();
       moveOneCell();
-      if (ultraSonic() > 2 && ultraSonic() < 30) {
+      if (ultraSonic() > 2 && ultraSonic() < 25) {
         turnLeft();
         moveOneCell();
         turnRight();
@@ -169,6 +182,7 @@ void caseDefine() {
         Beepbeep(2);
         delay(1000);
         caseNum = 11;
+        // caseNum = 3;
         caseDefine();
 
       } else {
@@ -179,9 +193,80 @@ void caseDefine() {
         Beepbeep(2);
         delay(1000);
         caseNum = 10;
+        // caseNum = 2;
         caseDefine();
-
       }
+      break;
+
+    case 2:  // a s r s s l s s s r s s (if found l s r s) (else s l s) not found box
+      turnAround();
+      moveOneCell();
+      turnRight();
+      moveOneCell();
+      moveOneCell();
+      turnLeft();
+      moveOneCell();
+      moveOneCell();
+      moveOneCell();
+      turnRight();
+      moveOneCell();
+      moveOneCell();
+
+      // Now check if something (box) is detected by ultrasonic
+      if (ultraSonic() > 2 && ultraSonic() < 25) {
+        // if found box → l s r s
+        turnLeft();
+        moveOneCell();
+        turnRight();
+        moveOneCell();
+      } else {
+        // else → s l s
+        moveOneCell();
+        turnLeft();
+        moveOneCell();
+      }
+
+      lowBreak();
+      delay(60);
+      Beepbeep(3);
+      delay(1000);
+      break;
+
+    case 3://found box at check point
+      turnAround();   // a
+      moveOneCell();  // s
+      turnLeft();     // l
+      moveOneCell();  // s
+      turnRight();    // r
+      moveOneCell();  // s
+      turnLeft();     // l
+      moveOneCell();  // s
+      moveOneCell();  // s
+      moveOneCell();  // s
+      turnRight();    // r
+      moveOneCell();  // s
+      moveOneCell();  // s
+
+      // 🔍 Check for box using ultrasonic
+      if (ultraSonic() > 2 && ultraSonic() < 25) {
+        // Box found → l s r s
+        turnLeft();
+        moveOneCell();
+        turnRight();
+        moveOneCell();
+        Serial.println("Box detected - performed l s r s");
+      } else {
+        // No box → s l s
+        moveOneCell();
+        turnLeft();
+        moveOneCell();
+        Serial.println("No box - performed s l s");
+      }
+
+      lowBreak();
+      delay(100);
+      Beepbeep(3);
+      delay(1000);
       break;
     case 10:  //back to start 1 no box:a s r s s s l push s s s r s s s l s
       turnAround();
@@ -199,7 +284,7 @@ void caseDefine() {
       moveOneCell();
       moveOneCell();
       turnLeft();
-      if (ultraSonic() > 2 && ultraSonic() < 30) {
+      if (ultraSonic() > 2 && ultraSonic() < 25) {
         turnRight();
         moveOneCell();
         turnLeft();
@@ -235,7 +320,7 @@ void caseDefine() {
       moveOneCell();
       moveOneCell();
       turnLeft();
-      if (ultraSonic() > 2 && ultraSonic() < 30) {
+      if (ultraSonic() > 2 && ultraSonic() < 25) {
         turnRight();
         moveOneCell();
         turnLeft();
@@ -258,8 +343,8 @@ void caseDefine() {
 }
 
 void pushOrangebox() {  //s l s / r s s / r s s / r s r / s s r / s l s / l s s / l s r / s r s / r
-  pushBoxforOneCell();      //push
-  turnLeft();     
+  pushBoxforOneCell();  //push
+  turnLeft();
   moveOneCell();
 
   turnRight();
@@ -283,7 +368,7 @@ void pushOrangebox() {  //s l s / r s s / r s s / r s r / s s r / s l s / l s s 
   moveOneCell();
 
   turnLeft();
-  moveOneCell();
+  moveOneCellForPushBox();
   pushBoxforOneCell();
 
   turnLeft();
@@ -296,18 +381,35 @@ void pushOrangebox() {  //s l s / r s s / r s s / r s r / s s r / s l s / l s s 
 
   turnRight();
 }
-void pushBoxforOneCell(){
-  moveOneCell();
+void pushBoxforOneCell() {
+  moveOneCellForPushBox();
+  BackwardAfterPush();
   lowBreak();
   delay(60);
-  Forward(250, 230);
-  delay(600);
-  lowBreak(); 
-  delay(60);
-  Backward(leftSpeed, rightSpeed);
+}
+void moveOneCellForPushBox() {
+  // leave the current node slightly so we don't retrigger immediately
+  // while (millis() - t0 < 700) {
+  //   Forward(leftSpeed, rightSpeed);
+  // }
+  while (RobotOnCross() == 0) {
+    Forward(180, 180);
+  }
+
+  Forward(180, 180);
+  delay(700);
+  changePosition();
+  lowBreak();
+  Beepbeep(1);
+  Serial.println("walking 1 cell");
+}
+
+void BackwardAfterPush() {
+  Backward(leftSpeed,rightSpeed);
   delay(500);
+  Serial.println("HE HE!!");
   lowBreak();
-  delay(60);
+  delay(120);
 }
 
 void moveOneCell() {
@@ -315,18 +417,19 @@ void moveOneCell() {
   // while (millis() - t0 < 700) {
   //   Forward(leftSpeed, rightSpeed);
   // }
+  
+
   while (RobotOnCross() == 0) {
     Forward(leftSpeed, rightSpeed);
   }
 
-  unsigned long t0 = millis();
-  while (millis() - t0 < 200) {
-    Forward(leftSpeed, rightSpeed);
-  }
+  Forward(leftSpeed, rightSpeed);
+  delay(300);
   changePosition();
-  Serial.println("walking 1 cell");
   lowBreak();
-  delay(120);
+  Beepbeep(1);
+  Serial.println("walking 1 cell");
+  // delay(120);
 }
 
 
@@ -337,27 +440,34 @@ int ultraSonic() {
 }
 
 int RobotOnCross() {
-  static unsigned long lastTime = 0;
-  unsigned long now = millis();
-  if (now - lastTime < 300) return 0;
 
   readSensor();
+  // delay(100);
+
   int count = 0;
   for (int i = 0; i < 5; i++) {
     sensorBlack[i] = (sensorValues[i] > blackValue) ? 1 : 0;
-    if (sensorBlack[i]){
+    if (sensorBlack[i]) {
       count++;
-    } 
+    }
   }
 
   if (count >= 3) {
-    lastTime = now;
-    return 1;
+    if(haveBeenBlack == true){
+      // haveBeenBlack = false;
+      return 0;
+    }
+    else{
+      haveBeenBlack = true;
+      return 1;
+    }
   }
+  haveBeenBlack = false;
   return 0;
 }
 
 void Beepbeep(int Count) {
+  lowBreak();
   for (int i = 0; i < Count; i++) {
     digitalWrite(speakerPin, HIGH);
     delay(400);
@@ -375,22 +485,22 @@ void Forward(int SpeedL, int SpeedR) {
   }
   for (int i = 0; i < 5; i++) {
     if (sensorBlack[i] > 0) {
-      weight += (i * 1000) - 2000;
+      weight += (i * 10) - 20;
     }
     sensorBlack[i] = 0;
   }
   if (weight > 0) {
-    ForwardRight(SpeedR);
-    ForwardLeft(SpeedL - 50);
-    // Serial.println("Turn Right");
-  } else if (weight < 0) {
-    ForwardRight(SpeedR - 50);
+    ForwardRight(SpeedR - (abs(weight) * 2.2));
     ForwardLeft(SpeedL);
-    // Serial.println("Turn Left");
+    Serial.println("Turn Right");
+  } else if (weight < 0) {
+    ForwardRight(SpeedR);
+    ForwardLeft(SpeedL - (abs(weight) * 2.2));
+    Serial.println("Turn Left");
   } else {
     ForwardRight(SpeedR);
     ForwardLeft(SpeedL);
-    // Serial.println("Go Forward");
+    Serial.println("Go Forward");
   }
 }
 
@@ -413,92 +523,124 @@ void snapToLine() {  //ใส่หลังจาก Turn
 
 void turnLeft() {
   position.direction = (position.direction + 3) % 4;
-  BackwardLeft(140);
-  ForwardRight(120);
-  delay(120);
+  BackwardLeft(turnSpeed);
+  ForwardRight(turnSpeed);
+  delay(220);
 
-  unsigned long t0 = millis();
-  while (millis() - t0 < 800) {
+  while (true) {
     readSensor();
-    if (sensorValues[2] < blackValue) break;  // go away from line
+    if (sensorValues[2] > blackValue) break;
   }
 
-  bool seenOn = false;
-  t0 = millis();
-  while (millis() - t0 < 1200) {
-    readSensor();
-    bool centerOn = (sensorValues[2] > blackValue);// find the line
-    if (centerOn) {
-      seenOn = true;
-      break;
-    }
-  }
-  lowBreak();
   snapToLine();
+  lowBreak();
   Serial.println("TurnLeft");
+
+  // logic arai wa
+
+  // unsigned long t0 = millis();
+  // while (millis() - t0 < 800) {
+  //   readSensor();
+  //   if (sensorValues[2] < blackValue) break;  // go away from line
+  // }
+
+  // bool seenOn = false;
+  // t0 = millis();
+  // while (millis() - t0 < 1200) {
+  //   readSensor();
+  //   bool centerOn = (sensorValues[2] > blackValue);  // find the line
+  //   if (centerOn) {
+  //     seenOn = true;
+  //     break;
+  //   }
+  // }
 }
 
 void turnRight() {
   position.direction = (position.direction + 1) % 4;
-  ForwardLeft(140);
-  BackwardRight(120);
-  delay(120);
+  ForwardLeft(turnSpeed);
+  BackwardRight(turnSpeed);
 
-  unsigned long t0 = millis();
-  while (millis() - t0 < 800) {
-    readSensor();
-    if (sensorValues[2] < blackValue) break;  // go away from line
-  }
+  delay(360);
 
-  bool seenOn = false;
-  t0 = millis();
-  while (millis() - t0 < 1200) {
+  while (true) {
     readSensor();
-    bool centerOn = (sensorValues[2] > blackValue); // find the line
-    if (centerOn) {
-      seenOn = true;
-      break;
-    }
+    if (sensorValues[2] > blackValue) break;
   }
   lowBreak();
   snapToLine();
   Serial.println("TurnRight");
+
+  // logic อะไรวะ
+  // delay(170);
+
+  // unsigned long t0 = millis();
+  // while (millis() - t0 < 800) {
+  //   readSensor();
+  //   if (sensorValues[2] < blackValue) break;  // go away from line
+  // }
+
+  // bool seenOn = false;
+  // t0 = millis();
+  // while (millis() - t0 < 1200) {
+  //   readSensor();
+  //   bool centerOn = (sensorValues[2] > blackValue);  // find the line
+  //   if (centerOn) {
+  //     seenOn = true;
+  //     break;
+  //   }
+  // }
 }
 
 void turnAround() {
   position.direction = (position.direction + 2) % 4;
-  ForwardLeft(140);
-  BackwardRight(120);
-  delay(120);
-  unsigned long t0 = millis();
-  while (millis() - t0 < 800) {
+  ForwardLeft(turnSpeed);
+  BackwardRight(turnSpeed);
+  delay(400);
+
+  while (true) {
     readSensor();
-    if (sensorValues[2] < blackValue) break;  // center off the old line
+    if (sensorValues[2] > blackValue) break;
   }
+
+  delay(400);
+
+  while (true) {
+    readSensor();
+    if (sensorValues[2] > blackValue) break;
+  }
+  highBreak();
+
+
+  // Logic มหาอะไรวะ
+  // unsigned long t0 = millis();
+  // while (millis() - t0 < 800) {
+  //   readSensor();
+  //   if (sensorValues[2] < blackValue) break;  // center off the old line
+  // }
 
   // 2) Count two center-on crossings (≈90° and ≈180°)
-  int crossings = 0;
-  bool prevOn = false;
-  t0 = millis();
-  while (millis() - t0 < 2200) {  // safety timeout
-    readSensor();
-    bool centerOn = (sensorValues[2] > blackValue);
-    if (centerOn && !prevOn) {  // rising edge
-      crossings++;
-      if (crossings >= 2) {  // reached ~180°
-        delay(70);           // small extra to center
-        break;
-      }
-    }
-    prevOn = centerOn;
-  }
+  // int crossings = 0;
+  // bool prevOn = false;
+  // t0 = millis();
+  // while (millis() - t0 < 2200) {  // safety timeout
+  //   readSensor();
+  //   bool centerOn = (sensorValues[2] > blackValue);
+  //   if (centerOn && !prevOn) {  // rising edge
+  //     crossings++;
+  //     if (crossings >= 2) {  // reached ~180°
+  //       delay(70);           // small extra to center
+  //       break;
+  //     }
+  //   }
+  //   prevOn = centerOn;
+  // }
 
-  lowBreak();
   snapToLine();  // fine-align on the corridor
 }
 
 void Backward(int SpeedL, int SpeedR) {
-    readSensor();
+  readSensor();
   Serial.println("This worked naja");
   int weight = 0;
   for (int i = 0; i < 5; i++) {
@@ -506,16 +648,16 @@ void Backward(int SpeedL, int SpeedR) {
   }
   for (int i = 0; i < 5; i++) {
     if (sensorBlack[i] > 0) {
-      weight += (i * 1000) - 2000;
+      weight += (i * 10) - 20;
     }
     sensorBlack[i] = 0;
   }
   if (weight > 0) {
     BackwardRight(SpeedR);
-    BackwardLeft(SpeedL - 50);
+    BackwardLeft(SpeedL - (abs(weight * 2.2)));
     // Serial.println("Turn Right");
   } else if (weight < 0) {
-    BackwardRight(SpeedR - 50);
+    BackwardRight(SpeedR - (abs(weight * 2.2)));
     BackwardLeft(SpeedL);
     // Serial.println("Turn Left");
   } else {
@@ -579,7 +721,7 @@ void highBreak() {
   digitalWrite(in2, HIGH);
   digitalWrite(in3, HIGH);
   digitalWrite(in4, HIGH);
-}  
+}
 // void showGridInt(const int grid[ROWS][COLS]) {
 //   for (int y = 0; y < ROWS; y++) {
 //     for (int x = 0; x < COLS; x++) {
